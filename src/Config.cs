@@ -107,6 +107,9 @@ namespace NoCableLauncher
 
     public class Config
     {
+        // [UI]
+        public string Language = "auto";   // auto | ru | en
+
         // [Game]
         public bool IsSteam = true;
         public string GameExe = "";      // only when not Steam
@@ -177,6 +180,7 @@ namespace NoCableLauncher
         {
             Config c = new Config();
             IniFile f = new IniFile(FilePath);
+            c.Language = f.Get("UI", "Language", c.Language);
             c.IsSteam = B(f.Get("Game", "Steam", null), c.IsSteam);
             c.GameExe = f.Get("Game", "GameExe", c.GameExe);
             c.GameDir = f.Get("Game", "GameDir", c.GameDir);
@@ -220,6 +224,7 @@ namespace NoCableLauncher
         public void Save()
         {
             IniFile f = new IniFile(FilePath);
+            f.Set("UI", "Language", Language);
             f.Set("Game", "Steam", Bs(IsSteam));
             f.Set("Game", "GameExe", GameExe);
             f.Set("Game", "GameDir", GameDir);

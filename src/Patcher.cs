@@ -74,8 +74,8 @@ namespace NoCableLauncher
             handle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE,
                                  false, game.Id);
             if (handle == IntPtr.Zero)
-                throw new Exception("Не удалось открыть процесс игры (ошибка " + Marshal.GetLastWin32Error() +
-                                    "). Если игра запущена от администратора — запустите лончер так же.");
+                throw new Exception(Tr.T("Не удалось открыть процесс игры (ошибка ", "Could not open the game process (error ") + Marshal.GetLastWin32Error() +
+                                    Tr.T("). Если игра запущена от администратора — запустите лончер так же.", "). If the game runs as administrator, run the launcher the same way."));
         }
 
         public void Dispose()
@@ -86,7 +86,7 @@ namespace NoCableLauncher
         public static byte[] ParseId(string hex)
         {
             int v = int.Parse(hex.Trim(), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            if (v < 0 || v > 0xFFFF) throw new FormatException("VID/PID должен быть 4 hex-цифры: " + hex);
+            if (v < 0 || v > 0xFFFF) throw new FormatException(Tr.T("VID/PID должен быть 4 hex-цифры: ", "VID/PID must be 4 hex digits: ") + hex);
             return new byte[] { (byte)(v & 0xFF), (byte)(v >> 8) };
         }
 
@@ -219,14 +219,14 @@ namespace NoCableLauncher
 
                 if (TryAddress(cachedVidAddr, vid, pid))
                 {
-                    Log.Write("Адрес из кэша подошёл: 0x" + U(AddrVid).ToString("X8") + " (попытка " + attempt + ")");
+                    Log.Write(Tr.T("Адрес из кэша подошёл: 0x", "Cached address is valid: 0x") + U(AddrVid).ToString("X8") + Tr.T(" (попытка ", " (attempt ") + attempt + ")");
                     return true;
                 }
 
                 long ms, me;
                 if (GetModule(out ms, out me) && Scan(ms, me, patterns))
                 {
-                    Log.Write("Найдено в модуле: 0x" + U(AddrVid).ToString("X8") + " (попытка " + attempt + ", " + sw.ElapsedMilliseconds + " мс)");
+                    Log.Write(Tr.T("Найдено в модуле: 0x", "Found in module: 0x") + U(AddrVid).ToString("X8") + Tr.T(" (попытка ", " (attempt ") + attempt + ", " + sw.ElapsedMilliseconds + Tr.T(" мс)", " ms)"));
                     return true;
                 }
 
@@ -234,10 +234,10 @@ namespace NoCableLauncher
                 if (!fullScanDone && sw.Elapsed.TotalSeconds > timeoutSec / 2.0)
                 {
                     fullScanDone = true;
-                    Log.Write("В модуле не найдено, сканирую всю память процесса...");
+                    Log.Write(Tr.T("В модуле не найдено, сканирую всю память процесса...", "Not found in module, scanning the whole process memory..."));
                     if (Scan(0x10000, 0xFFFF0000L, patterns))
                     {
-                        Log.Write("Найдено вне модуля: 0x" + U(AddrVid).ToString("X8"));
+                        Log.Write(Tr.T("Найдено вне модуля: 0x", "Found outside module: 0x") + U(AddrVid).ToString("X8"));
                         return true;
                     }
                 }
@@ -281,7 +281,7 @@ namespace NoCableLauncher
                 Thread.Sleep(250);
                 if (!IsPatched(vid, pid))
                 {
-                    Log.Write("Значения в памяти изменились — патчу повторно");
+                    Log.Write(Tr.T("Значения в памяти изменились — патчу повторно", "Memory values changed — patching again"));
                     Patch(vid, pid);
                 }
             }

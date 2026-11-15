@@ -33,16 +33,16 @@ namespace NoCableLauncher
             List<AudioDevice> inputs = CoreAudio.GetDevices(EDataFlow.Capture, DeviceState.Active);
             List<AudioDevice> outputs = CoreAudio.GetDevices(EDataFlow.Render, DeviceState.Active);
 
-            foreach (AudioDevice d in inputs) Log.Write("Вход:  " + d + "  id=" + d.Id);
-            foreach (AudioDevice d in outputs) Log.Write("Выход: " + d + "  id=" + d.Id);
+            foreach (AudioDevice d in inputs) Log.Write(Tr.T("Вход:  ", "Input:  ") + d + "  id=" + d.Id);
+            foreach (AudioDevice d in outputs) Log.Write(Tr.T("Выход: ", "Output: ") + d + "  id=" + d.Id);
 
             bool inputPresent = cfg.InputId.Length > 0 && inputs.Exists(delegate(AudioDevice d) { return d.Id == cfg.InputId; });
             bool outputPresent = cfg.OutputId.Length > 0 && outputs.Exists(delegate(AudioDevice d) { return d.Id == cfg.OutputId; });
 
             if (cfg.InputId.Length > 0 && !inputPresent)
-                Log.Write("ВНИМАНИЕ: выбранный вход не найден среди активных — другие входы скрываться не будут.");
+                Log.Write(Tr.T("ВНИМАНИЕ: выбранный вход не найден среди активных — другие входы скрываться не будут.", "WARNING: the selected input is not active — other inputs will not be hidden."));
             if (cfg.OutputId.Length > 0 && !outputPresent)
-                Log.Write("ВНИМАНИЕ: выбранный выход не найден среди активных — другие выходы скрываться не будут.");
+                Log.Write(Tr.T("ВНИМАНИЕ: выбранный выход не найден среди активных — другие выходы скрываться не будут.", "WARNING: the selected output is not active — other outputs will not be hidden."));
 
             // 1. Remember defaults
             foreach (ERole role in Roles)
@@ -87,10 +87,10 @@ namespace NoCableLauncher
             // 4. Sample rate / bit depth
             if (cfg.SetFormat)
             {
-                if (inputPresent) ApplyFormat(cfg.InputId, cfg.SampleRate, cfg.BitDepth, "вход");
-                if (outputPresent) ApplyFormat(cfg.OutputId, cfg.SampleRate, cfg.BitDepth, "выход");
+                if (inputPresent) ApplyFormat(cfg.InputId, cfg.SampleRate, cfg.BitDepth, Tr.T("вход", "input"));
+                if (outputPresent) ApplyFormat(cfg.OutputId, cfg.SampleRate, cfg.BitDepth, Tr.T("выход", "output"));
                 if (cfg.Multiplayer && cfg.Input2Id.Length > 0 && cfg.Input2Id != cfg.InputId)
-                    ApplyFormat(cfg.Input2Id, cfg.SampleRate, cfg.BitDepth, "вход игрока 2");
+                    ApplyFormat(cfg.Input2Id, cfg.SampleRate, cfg.BitDepth, Tr.T("вход игрока 2", "player 2 input"));
             }
         }
 
@@ -99,7 +99,7 @@ namespace NoCableLauncher
         static void Try(string what, Action0 a)
         {
             try { a(); }
-            catch (Exception ex) { Log.Write("Ошибка (" + what + "): " + ex.Message); }
+            catch (Exception ex) { Log.Write(Tr.T("Ошибка (", "Error (") + what + "): " + ex.Message); }
         }
 
         static void Hide(AudioDevice d)
@@ -108,15 +108,15 @@ namespace NoCableLauncher
             try
             {
                 CoreAudio.SetVisibility(d.Id, false);
-                Log.Write("Скрыто: " + d.Name);
+                Log.Write(Tr.T("Скрыто: ", "Hidden: ") + d.Name);
             }
-            catch (Exception ex) { Log.Write("Не удалось скрыть " + d.Name + ": " + ex.Message); }
+            catch (Exception ex) { Log.Write(Tr.T("Не удалось скрыть ", "Could not hide ") + d.Name + ": " + ex.Message); }
         }
 
         public static void ShowDevice(string id)
         {
             try { CoreAudio.SetVisibility(id, true); }
-            catch (Exception ex) { Log.Write("Не удалось вернуть устройство: " + ex.Message); }
+            catch (Exception ex) { Log.Write(Tr.T("Не удалось вернуть устройство: ", "Could not restore device: ") + ex.Message); }
         }
 
         static void ApplyFormat(string id, int rate, int bits, string label)
@@ -127,13 +127,13 @@ namespace NoCableLauncher
                 WaveFormat curMix = CoreAudio.GetMixFormat(id);
                 if (cur == null)
                 {
-                    Log.Write("Формат (" + label + "): не удалось прочитать текущий формат, пропускаю");
+                    Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): не удалось прочитать текущий формат, пропускаю", "): could not read the current format, skipping"));
                     return;
                 }
-                Log.Write("Формат (" + label + "): сейчас " + cur);
+                Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): сейчас ", "): current ") + cur);
                 if (cur.SampleRate == rate && cur.ValidBits == bits)
                 {
-                    Log.Write("Формат (" + label + "): уже нужный");
+                    Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): уже нужный", "): already correct"));
                     return;
                 }
 
@@ -149,7 +149,7 @@ namespace NoCableLauncher
                 CoreAudio.SetDeviceFormat(id, endpoint, mix);
 
                 WaveFormat now = CoreAudio.GetDeviceFormat(id);
-                Log.Write("Формат (" + label + "): установлен " + (now != null ? now.ToString() : "?"));
+                Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): установлен ", "): set to ") + (now != null ? now.ToString() : "?"));
 
                 if (now != null && (now.SampleRate != rate || now.ValidBits != bits) && container == 24)
                 {
@@ -157,12 +157,12 @@ namespace NoCableLauncher
                     endpoint = WaveFormat.Create(channels, rate, 32, 24, mask, false);
                     CoreAudio.SetDeviceFormat(id, endpoint, mix);
                     now = CoreAudio.GetDeviceFormat(id);
-                    Log.Write("Формат (" + label + "): повтор 24-в-32 -> " + (now != null ? now.ToString() : "?"));
+                    Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): повтор 24-в-32 -> ", "): retry with 24-in-32 -> ") + (now != null ? now.ToString() : "?"));
                 }
             }
             catch (Exception ex)
             {
-                Log.Write("Формат (" + label + "): ошибка " + ex.Message + " — устройство поддерживает " + rate + " Гц / " + bits + " бит?");
+                Log.Write(Tr.T("Формат (", "Format (") + label + Tr.T("): ошибка ", "): error ") + ex.Message + Tr.T(" — устройство поддерживает ", " — does the device support ") + rate + Tr.T(" Гц / ", " Hz / ") + bits + Tr.T(" бит?", " bit?"));
             }
         }
 
@@ -170,10 +170,10 @@ namespace NoCableLauncher
         public static void Restore()
         {
             if (!File.Exists(StatePath)) return;
-            Log.Write("Восстанавливаю звуковые настройки...");
+            Log.Write(Tr.T("Восстанавливаю звуковые настройки...", "Restoring audio settings..."));
             string[] lines;
             try { lines = File.ReadAllLines(StatePath); }
-            catch (Exception ex) { Log.Write("Не удалось прочитать state: " + ex.Message); return; }
+            catch (Exception ex) { Log.Write(Tr.T("Не удалось прочитать state: ", "Could not read state file: ") + ex.Message); return; }
 
             // visibility first, otherwise defaults/formats can't be applied to hidden devices
             foreach (string l in lines)
@@ -212,7 +212,7 @@ namespace NoCableLauncher
             }
 
             try { File.Delete(StatePath); } catch { }
-            Log.Write("Звуковые настройки восстановлены.");
+            Log.Write(Tr.T("Звуковые настройки восстановлены.", "Audio settings restored."));
         }
 
         /// <summary>Make Player 2 input visible again (multiplayer, after Ctrl+M).</summary>

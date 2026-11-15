@@ -116,10 +116,10 @@ namespace NoCableLauncher
         {
             switch (st)
             {
-                case DeviceState.Active: return "активно";
-                case DeviceState.Disabled: return "отключено";
-                case DeviceState.Unplugged: return "не подключено";
-                case DeviceState.NotPresent: return "отсутствует";
+                case DeviceState.Active: return Tr.T("активно", "active");
+                case DeviceState.Disabled: return Tr.T("отключено", "disabled");
+                case DeviceState.Unplugged: return Tr.T("не подключено", "unplugged");
+                case DeviceState.NotPresent: return Tr.T("отсутствует", "not present");
                 default: return st.ToString();
             }
         }
@@ -209,7 +209,7 @@ namespace NoCableLauncher
 
         public override string ToString()
         {
-            return string.Format("{0} Гц, {1} бит{2}, {3} кан.", SampleRate, ValidBits, IsFloat ? " float" : "", Channels);
+            return string.Format(Tr.T("{0} Гц, {1} бит{2}, {3} кан.", "{0} Hz, {1} bit{2}, {3} ch."), SampleRate, ValidBits, IsFloat ? " float" : "", Channels);
         }
     }
 
@@ -235,7 +235,7 @@ namespace NoCableLauncher
         static IPolicyConfig NewPolicy()
         {
             IPolicyConfig p = new PolicyConfigComObject() as IPolicyConfig;
-            if (p == null) throw new NotSupportedException("IPolicyConfig недоступен в этой версии Windows");
+            if (p == null) throw new NotSupportedException(Tr.T("IPolicyConfig недоступен в этой версии Windows", "IPolicyConfig is not available in this version of Windows"));
             return p;
         }
 
@@ -277,7 +277,7 @@ namespace NoCableLauncher
                 }
                 finally { Marshal.ReleaseComObject(store); }
             }
-            if (string.IsNullOrEmpty(d.Name)) d.Name = "Неизвестное устройство";
+            if (string.IsNullOrEmpty(d.Name)) d.Name = Tr.T("Неизвестное устройство", "Unknown device");
             if (d.HardwareId == null) d.HardwareId = "";
 
             string hw = d.HardwareId.ToUpperInvariant();
@@ -311,7 +311,7 @@ namespace NoCableLauncher
                         // so callers should enumerate Render and Capture separately.
                         list.Add(Describe(dev, flow));
                     }
-                    catch (Exception ex) { Log.Write("Пропущено устройство: " + ex.Message); }
+                    catch (Exception ex) { Log.Write(Tr.T("Пропущено устройство: ", "Skipped device: ") + ex.Message); }
                     finally { Marshal.ReleaseComObject(dev); }
                 }
                 Marshal.ReleaseComObject(col);

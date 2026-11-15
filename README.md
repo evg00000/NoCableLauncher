@@ -23,7 +23,8 @@
 - **Исправлена ошибка «Offcets not found»:** поиск в памяти повторяется, пока игра не распакуется,
   записанный патч проверяется, перезапуск игры Steam'ом отслеживается.
 - Мультиплеер на двоих (Ctrl+M), как в оригинале.
-- Окно настроек на русском, настройки хранятся в обычном `NoCableLauncher.ini`, все шаги пишутся в `NoCableLauncher.log`.
+- Интерфейс на русском и английском: язык выбирается автоматически по Windows или вручную в настройках.
+- Настройки хранятся в обычном `NoCableLauncher.ini`, все шаги пишутся в `NoCableLauncher.log`.
 
 ## Установка
 
@@ -74,6 +75,7 @@ src/
   RsAsio.cs        установка и настройка RS_ASIO, поиск игры в Steam
   SettingsForm.cs  окно настроек
   Config.cs        INI-настройки и журнал
+  Tr.cs            локализация: строки пишутся как Tr.T("русский", "English")
 ```
 
 ## Если что-то не работает
@@ -95,7 +97,7 @@ audio interface. It is a fork of Maxx53/NoCableLauncher with a rewritten audio l
   on exit and journaled, so the launcher repairs it even after a crash.
 - The "Offcets not found" error is fixed: the memory is scanned region by region with retries, the patch
   is verified, and Steam relaunches are handled.
-- The UI is in Russian. Settings are kept in `NoCableLauncher.ini`, and the log is written to `NoCableLauncher.log`.
+- The UI is in English and Russian, picked from the Windows language or set in Settings → Advanced. Settings are kept in `NoCableLauncher.ini`, and the log is written to `NoCableLauncher.log`.
 - To build, run `build.bat`; it needs only .NET Framework 4.x, which comes with Windows.
 
 ## Благодарности / Credits

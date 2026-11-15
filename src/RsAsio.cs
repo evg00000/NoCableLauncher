@@ -53,7 +53,7 @@ namespace NoCableLauncher
                             res.Add(n);
                 }
             }
-            catch (Exception ex) { Log.Write("Не удалось прочитать список ASIO: " + ex.Message); }
+            catch (Exception ex) { Log.Write(Tr.T("Не удалось прочитать список ASIO: ", "Could not read the ASIO driver list: ") + ex.Message); }
             res.Sort(StringComparer.OrdinalIgnoreCase);
             return res;
         }
@@ -126,15 +126,15 @@ namespace NoCableLauncher
         public static void Install(string gameDir)
         {
             if (!SourceAvailable)
-                throw new Exception("Не найдены файлы RS_ASIO.\nСкачайте release-*.zip со страницы github.com/mdias/rs_asio/releases " +
-                                    "и распакуйте avrt.dll, RS_ASIO.dll и RS_ASIO.ini в папку:\n" + SourceDir);
+                throw new Exception(Tr.T("Не найдены файлы RS_ASIO.\nСкачайте release-*.zip со страницы github.com/mdias/rs_asio/releases ", "RS_ASIO files not found.\nDownload release-*.zip from github.com/mdias/rs_asio/releases ") +
+                                    Tr.T("и распакуйте avrt.dll, RS_ASIO.dll и RS_ASIO.ini в папку:\n", "and extract avrt.dll, RS_ASIO.dll and RS_ASIO.ini into:\n") + SourceDir);
             foreach (string f in Files)
             {
                 string src = Path.Combine(SourceDir, f), dst = Path.Combine(gameDir, f);
                 if (!SameFile(src, dst))
                 {
                     File.Copy(src, dst, true);
-                    Log.Write("RS_ASIO: скопирован " + f);
+                    Log.Write(Tr.T("RS_ASIO: скопирован ", "RS_ASIO: copied ") + f);
                 }
             }
             string ini = Path.Combine(gameDir, "RS_ASIO.ini");
@@ -156,7 +156,7 @@ namespace NoCableLauncher
                 if (File.Exists(dst)) File.Delete(dst);
                 File.Move(p, dst);
             }
-            Log.Write("RS_ASIO убран из папки игры в " + bak);
+            Log.Write(Tr.T("RS_ASIO убран из папки игры в ", "RS_ASIO moved out of the game folder to ") + bak);
         }
 
         // ---------- Configuration ----------
@@ -181,7 +181,7 @@ namespace NoCableLauncher
 
             f.Set("Asio.Input.Mic", "Driver", "");
             f.Save();
-            Log.Write("RS_ASIO.ini: драйвер \"" + drv + "\", вход " + cfg.AsioInputChannel + ", выход " + cfg.AsioOutputChannel);
+            Log.Write(Tr.T("RS_ASIO.ini: драйвер \"", "RS_ASIO.ini: driver \"") + drv + Tr.T("\", вход ", "\", input ") + cfg.AsioInputChannel + Tr.T(", выход ", ", output ") + cfg.AsioOutputChannel);
 
             if (cfg.AsioSetRocksmithIni) SetRocksmithIni(gameDir);
         }
@@ -189,7 +189,7 @@ namespace NoCableLauncher
         static void SetRocksmithIni(string gameDir)
         {
             string path = Path.Combine(gameDir, "Rocksmith.ini");
-            if (!File.Exists(path)) { Log.Write("Rocksmith.ini не найден — пропускаю"); return; }
+            if (!File.Exists(path)) { Log.Write(Tr.T("Rocksmith.ini не найден — пропускаю", "Rocksmith.ini not found — skipping")); return; }
             string bak = path + ".ncl-backup";
             if (!File.Exists(bak)) File.Copy(path, bak);
 

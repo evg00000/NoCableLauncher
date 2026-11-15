@@ -12,12 +12,12 @@ namespace NoCableLauncher
 {
     class GameExitedException : Exception
     {
-        public GameExitedException() : base("Игра закрылась") { }
+        public GameExitedException() : base(Tr.T("Игра закрылась", "The game has exited")) { }
     }
 
     static class Program
     {
-        public const string Version = "2.0";
+        public const string Version = "2.1";
         public const string SteamUrl = "steam://rungameid/221680";
         const string ExeName = "Rocksmith2014";
 
@@ -31,13 +31,15 @@ namespace NoCableLauncher
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Log.Init();
+            try { Tr.Init(Config.Load().Language); }
+            catch { Tr.Init("auto"); }
 
             bool created;
             using (Mutex mutex = new Mutex(true, "NoCableLauncher2_SingleInstance", out created))
             {
                 if (!created)
                 {
-                    Error("Лончер уже запущен.");
+                    Error(Tr.T("Лончер уже запущен.", "The launcher is already running."));
                     return 1;
                 }
 
@@ -47,7 +49,7 @@ namespace NoCableLauncher
                     if (arg == "-restore" || arg == "/restore")
                     {
                         AudioSetup.Restore();
-                        MessageBox.Show("Звуковые устройства и форматы возвращены.", "NoCableLauncher");
+                        MessageBox.Show(Tr.T("Звуковые устройства и форматы возвращены.", "Audio devices and formats have been restored."), "NoCableLauncher");
                         return 0;
                     }
 
@@ -69,7 +71,7 @@ namespace NoCableLauncher
                 }
                 catch (Exception ex)
                 {
-                    Log.Write("Ошибка: " + ex);
+                    Log.Write(Tr.T("Ошибка: ", "Error: ") + ex);
                     try { AudioSetup.Restore(); } catch { }
                     Error(ex.Message);
                     return 1;
@@ -79,7 +81,7 @@ namespace NoCableLauncher
 
         static void Error(string msg)
         {
-            MessageBox.Show(msg + "\n\nПодробности: NoCableLauncher.log", "NoCableLauncher — ошибка",
+            MessageBox.Show(msg + Tr.T("\n\nПодробности: NoCableLauncher.log", "\n\nDetails: NoCableLauncher.log"), Tr.T("NoCableLauncher — ошибка", "NoCableLauncher — error"),
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
@@ -87,19 +89,19 @@ namespace NoCableLauncher
         {
             if (AudioSetup.HasPendingRestore)
             {
-                Log.Write("Найдены несохранённые изменения от прошлого запуска — возвращаю.");
+                Log.Write(Tr.T("Найдены несохранённые изменения от прошлого запуска — возвращаю.", "Found unrestored changes from the previous run — restoring."));
                 AudioSetup.Restore();
             }
 
             if (Process.GetProcessesByName(ExeName).Length > 0)
             {
-                Error("Rocksmith уже запущен. Закройте игру и запустите её через лончер — " +
-                      "игра выбирает устройство только при старте.");
+                Error(Tr.T("Rocksmith уже запущен. Закройте игру и запустите её через лончер — ", "Rocksmith is already running. Close the game and start it through the launcher — ") +
+                      Tr.T("игра выбирает устройство только при старте.", "the game picks its device only at startup."));
                 return 1;
             }
 
             string gameDir = RsAsio.DetectGameDir(cfg);
-            Log.Write("Папка игры: " + (gameDir ?? "не найдена") + ", режим: " + cfg.Mode);
+            Log.Write(Tr.T("Папка игры: ", "Game folder: ") + (gameDir ?? Tr.T("не найдена", "not found")) + Tr.T(", режим: ", ", mode: ") + cfg.Mode);
 
             if (cfg.Mode == AudioMode.Asio)
                 return RunAsio(cfg, gameDir);
@@ -111,11 +113,11 @@ namespace NoCableLauncher
         static int RunAsio(Config cfg, string gameDir)
         {
             if (gameDir == null)
-                throw new Exception("Не найдена папка игры. Укажите её в настройках (вкладка «Игра»).");
+                throw new Exception(Tr.T("Не найдена папка игры. Укажите её в настройках (вкладка «Игра»).", "Game folder not found. Set it in the settings (\"Game\" tab)."));
             RsAsio.Install(gameDir);
             RsAsio.Configure(cfg, gameDir);
             StartGame(cfg);
-            Log.Write("Игра запущена в режиме RS_ASIO.");
+            Log.Write(Tr.T("Игра запущена в режиме RS_ASIO.", "Game started in RS_ASIO mode."));
             return 0;
         }
 
@@ -127,7 +129,7 @@ namespace NoCableLauncher
             if (gameDir != null && RsAsio.IsInstalled(gameDir))
             {
                 try { RsAsio.Disable(gameDir); }
-                catch (Exception ex) { Log.Write("Не удалось убрать RS_ASIO: " + ex.Message); }
+                catch (Exception ex) { Log.Write(Tr.T("Не удалось убрать RS_ASIO: ", "Could not remove RS_ASIO: ") + ex.Message); }
             }
 
             byte[] vid = Patcher.ParseId(cfg.Vid), pid = Patcher.ParseId(cfg.Pid);
@@ -137,7 +139,7 @@ namespace NoCableLauncher
                 vid2 = Patcher.ParseId(cfg.Vid2);
                 pid2 = Patcher.ParseId(cfg.Pid2);
             }
-            Log.Write("Игрок 1: VID " + cfg.Vid + " PID " + cfg.Pid + (cfg.Multiplayer ? ", игрок 2: VID " + cfg.Vid2 + " PID " + cfg.Pid2 : ""));
+            Log.Write(Tr.T("Игрок 1: VID ", "Player 1: VID ") + cfg.Vid + " PID " + cfg.Pid + (cfg.Multiplayer ? Tr.T(", игрок 2: VID ", ", player 2: VID ") + cfg.Vid2 + " PID " + cfg.Pid2 : ""));
 
             int hotkeyId = 0;
             try
@@ -165,20 +167,20 @@ namespace NoCableLauncher
                         {
                             hotkeyPressed = false;
                             if (patcher.Patch(vid2, pid2))
-                                Log.Write("Ctrl+M: пропатчено для игрока 2");
+                                Log.Write(Tr.T("Ctrl+M: пропатчено для игрока 2", "Ctrl+M: patched for player 2"));
                             else
-                                Log.Write("Ctrl+M: не удалось записать ID игрока 2");
+                                Log.Write(Tr.T("Ctrl+M: не удалось записать ID игрока 2", "Ctrl+M: could not write player 2 IDs"));
                             AudioSetup.RevealPlayer2(cfg);
                         }
 
                         if (!restoredEarly && cfg.RestoreDelaySec > 0 && since.Elapsed.TotalSeconds >= cfg.RestoreDelaySec)
                         {
                             restoredEarly = true;
-                            Log.Write("Прошло " + cfg.RestoreDelaySec + " с — возвращаю устройства, не дожидаясь выхода из игры");
+                            Log.Write(Tr.T("Прошло ", "") + cfg.RestoreDelaySec + Tr.T(" с — возвращаю устройства, не дожидаясь выхода из игры", " s passed — restoring devices without waiting for the game to exit"));
                             AudioSetup.Restore();
                         }
                     }
-                    Log.Write("Игра закрыта (код " + SafeExitCode(game) + ")");
+                    Log.Write(Tr.T("Игра закрыта (код ", "Game closed (exit code ") + SafeExitCode(game) + ")");
                 }
             }
             finally
@@ -207,12 +209,12 @@ namespace NoCableLauncher
             else
             {
                 if (!File.Exists(cfg.GameExe))
-                    throw new Exception("Не найден exe игры: " + cfg.GameExe + "\nПроверьте путь в настройках.");
+                    throw new Exception(Tr.T("Не найден exe игры: ", "Game exe not found: ") + cfg.GameExe + Tr.T("\nПроверьте путь в настройках.", "\nCheck the path in the settings."));
                 si = new ProcessStartInfo(cfg.GameExe);
                 si.WorkingDirectory = Path.GetDirectoryName(cfg.GameExe);
             }
             si.UseShellExecute = true;
-            Log.Write("Запуск: " + si.FileName);
+            Log.Write(Tr.T("Запуск: ", "Starting: ") + si.FileName);
             Process.Start(si);
         }
 
@@ -249,11 +251,11 @@ namespace NoCableLauncher
                 if (game == null)
                 {
                     if (attempt == 1)
-                        throw new Exception("Процесс " + ExeName + ".exe не появился за 3 минуты.");
+                        throw new Exception(Tr.T("Процесс ", "Process ") + ExeName + Tr.T(".exe не появился за 3 минуты.", ".exe did not appear within 3 minutes."));
                     break;
                 }
                 lastPid = game.Id;
-                Log.Write("Процесс игры найден, PID " + game.Id + " (попытка " + attempt + ")");
+                Log.Write(Tr.T("Процесс игры найден, PID ", "Game process found, PID ") + game.Id + Tr.T(" (попытка ", " (attempt ") + attempt + ")");
 
                 Patcher patcher = new Patcher(game);
                 try
@@ -261,16 +263,16 @@ namespace NoCableLauncher
                     if (!patcher.Locate(vid, pid, cached, cfg.ScanTimeoutSec))
                     {
                         patcher.Dispose();
-                        throw new Exception("Не удалось найти ID кабеля в памяти игры за " + cfg.ScanTimeoutSec + " с.\n" +
-                                            "Попробуйте увеличить время ожидания на вкладке «Дополнительно». " +
-                                            "Если игра обновилась и формат данных изменился — пришлите NoCableLauncher.log.");
+                        throw new Exception(Tr.T("Не удалось найти ID кабеля в памяти игры за ", "Could not find the cable IDs in game memory within ") + cfg.ScanTimeoutSec + Tr.T(" с.\n", " s.\n") +
+                                            Tr.T("Попробуйте увеличить время ожидания на вкладке «Дополнительно». ", "Try increasing the wait time on the \"Advanced\" tab. ") +
+                                            Tr.T("Если игра обновилась и формат данных изменился — пришлите NoCableLauncher.log.", "If the game was updated and the data layout changed, please send NoCableLauncher.log."));
                     }
                     if (!patcher.Patch(vid, pid))
                     {
                         patcher.Dispose();
-                        throw new Exception("Не удалось записать ID устройства в память игры.");
+                        throw new Exception(Tr.T("Не удалось записать ID устройства в память игры.", "Could not write the device IDs into game memory."));
                     }
-                    Log.Write("Пропатчено: VID @0x" + Patcher.U(patcher.AddrVid).ToString("X8") +
+                    Log.Write(Tr.T("Пропатчено: VID @0x", "Patched: VID @0x") + Patcher.U(patcher.AddrVid).ToString("X8") +
                               ", PID @0x" + Patcher.U(patcher.AddrPid).ToString("X8"));
 
                     string newVid = Patcher.U(patcher.AddrVid).ToString("X8");
@@ -279,7 +281,7 @@ namespace NoCableLauncher
                     {
                         cfg.OffsetVid = newVid;
                         cfg.OffsetPid = newPid;
-                        try { cfg.Save(); } catch (Exception ex) { Log.Write("Не удалось сохранить адрес: " + ex.Message); }
+                        try { cfg.Save(); } catch (Exception ex) { Log.Write(Tr.T("Не удалось сохранить адрес: ", "Could not save the address: ") + ex.Message); }
                     }
 
                     patcher.Guard(vid, pid, 15);
@@ -289,7 +291,7 @@ namespace NoCableLauncher
                 catch (GameExitedException)
                 {
                     patcher.Dispose();
-                    Log.Write("Процесс " + game.Id + " завершился — жду перезапуска игры Steam'ом");
+                    Log.Write(Tr.T("Процесс ", "Process ") + game.Id + Tr.T(" завершился — жду перезапуска игры Steam'ом", " exited — waiting for Steam to relaunch the game"));
                 }
                 catch
                 {
@@ -297,7 +299,7 @@ namespace NoCableLauncher
                     throw;
                 }
             }
-            throw new Exception("Игра закрылась сразу после запуска.");
+            throw new Exception(Tr.T("Игра закрылась сразу после запуска.", "The game exited right after start."));
         }
     }
 }
