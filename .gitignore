@@ -1,0 +1,11 @@
+# build output
+NoCableLauncher.exe
+*.pdb
+dist/
+
+# runtime files created next to the exe
+NoCableLauncher.ini
+NoCableLauncher.log
+NoCableLauncher.log.old
+NoCableLauncher.state
+RS_ASIO/
